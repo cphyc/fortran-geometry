@@ -13,3 +13,6 @@ test: test.o geometry.o
 
 run_test: test
 	./test
+
+clean:
+	rm -rf *.o *.mod
