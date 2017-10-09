@@ -41,10 +41,13 @@ end program test
 
 ## A note on the "algorithm"
 
-The "algorithm" is extremely poor for now: the code just takes the smallest volume to intersect with, draws random point within it and count the ratio of points that also fall in the other volume. As such, you get a convergence in `1/sqrt(N)` for the solution, where `N` is the number of draws you take.
+The "algorithm" is extremely poor for now: the code just takes the smallest volume out of the two volumes, draws random points within it and counts the ratio of points that fall in the other volume w.r.t. to the number of points drawn. As such, the convergence is in `1/sqrt(N)`, where `N` is the number of draws.
 
 As a side note, if the intersection volume is tiny w.r.t. the smallest volume, it is likely that you will get no point falling in the intersection and the code will erroneously report a non-existing intersection.
 
 ## Need some more examples?
 
 You can read the test or send me an email to get more information.
+
+## Licensing
+The code follows the MIT license. 
