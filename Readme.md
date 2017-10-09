@@ -2,8 +2,10 @@
 
 This is a very specific and very limited module in Fortran to easily volumetric properties of geometrical objects.
 For now it supports:
-* [ ] cube
-* [ ] cylinder
+* [x] cube
+* [x] cylinder
+* [ ] box (easy to implement, just not done)
+* [ ] sphere (should be easy too)
 
 ## How to use it?
 
@@ -45,9 +47,11 @@ The "algorithm" is extremely poor for now: the code just takes the smallest volu
 
 As a side note, if the intersection volume is tiny w.r.t. the smallest volume, it is likely that you will get no point falling in the intersection and the code will erroneously report a non-existing intersection.
 
+You should this algorithm as a first attempt to get a quick-and-dirty answer. For more precise codes, it will probably be required to develop a more complex code.
+
 ## Need some more examples?
 
 You can read the test or send me an email to get more information.
 
 ## Licensing
-The code follows the MIT license. 
+The code follows the MIT license.
