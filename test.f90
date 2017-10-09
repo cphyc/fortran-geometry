@@ -20,7 +20,8 @@ program test
   !----------------------------------------
   call super_test('Cylinder')
   call assert(cyl%check(), 'Initialization')
-! Checking the normals are perpendicular one from another
+  
+  ! Checking the normals are perpendicular one from another
   call assert(dot_product(cyl%normal1, cyl%normal2) == 0, "normals (1)")
   call assert(dot_product(cyl%normal1, cyl%normal3) == 0, "normals (2)")
   call assert(dot_product(cyl%normal2, cyl%normal3) == 0, "normals (3)")
@@ -54,6 +55,24 @@ program test
     call cyl%project(tmp, tmpOut)
     call assert(is_close(tmpOut%r, cyl%r, 1.d-10) &
          .and. is_close(tmpOut%z, cyl%h, 1.d-10), "Project onto axis 1+2")
+
+    ! Checking point in/out
+    tmp = cyl%center
+    call assert(cyl%contains(tmp), 'Point at center') 
+    tmp = cyl%center + cyl%normal1 * cyl%h * 0.9
+    call assert(cyl%contains(tmp), 'Point on axis')
+    tmp = cyl%center - cyl%normal1 * cyl%h * 1.1
+    call assert(.not. cyl%contains(tmp), 'Point on axis (out)')
+    tmp = cyl%center + cyl%normal2 * cyl%r * 0.99
+    call assert(cyl%contains(tmp), 'Point on radius')
+    tmp = cyl%center + cyl%normal2 * cyl%r * 1.01
+    call assert(.not. cyl%contains(tmp), 'Point on radius (out)')
+    tmp = cyl%center + cyl%normal2 * cyl%r * 0.99 + cyl%normal1 * cyl%h * 0.99
+    call assert(cyl%contains(tmp), 'Point close to cap')
+    tmp = cyl%center + cyl%normal2 * cyl%r * 1.01 + cyl%normal1 * cyl%h * 0.99
+    call assert(.not. cyl%contains(tmp), 'Point close to cap (out) (1)')
+    tmp = cyl%center + cyl%normal2 * cyl%r * 0.99 + cyl%normal1 * cyl%h * 1.01
+    call assert(.not. cyl%contains(tmp), 'Point close to cap (out) (2)')
   end block
 
   !----------------------------------------
@@ -103,7 +122,37 @@ program test
          is_close(tmpOut%y, 2._dp, 1.d-10) .and. &
          is_close(tmpOut%z, -3._dp, 1.d-10), &
          "Project onto axis 1+2+3")
+
+    tmp = cube%center
+    call assert(cube%contains(tmp), 'Point at center')
+    tmp = cube%center + cube%normal1 * cube%a * 0.49
+    call assert(cube%contains(tmp), 'Point normal (x)')
+    tmp = cube%center - cube%normal2 * cube%a * 0.49
+    call assert(cube%contains(tmp), 'Point normal (y)')
+    tmp = cube%center + cube%normal3 * cube%a * 0.49
+    call assert(cube%contains(tmp), 'Point normal (z)')
+
+    tmp = cube%center + cube%normal1 * cube%a * 0.51
+    call assert(.not. cube%contains(tmp), 'Point normal (out, x)')
+    tmp = cube%center - cube%normal2 * cube%a * 0.51
+    call assert(.not. cube%contains(tmp), 'Point normal (out, y)')
+    tmp = cube%center + cube%normal3 * cube%a * 0.51
+    call assert(.not. cube%contains(tmp), 'Point normal (out, z)')
+
+    tmp = cube%center + cube%normal1 * cube%a * 0.49 + &
+         cube%normal2 * cube%a * 0.49 + &
+         cube%normal3 * cube%a * 0.49
+    call assert(cube%contains(tmp), 'Point at edge')
+    tmp = cube%center + cube%normal1 * cube%a * 0.51 + &
+         cube%normal2 * cube%a * 0.49 + &
+         cube%normal3 * cube%a * 0.49
+    call assert(.not. cube%contains(tmp), 'Point at edge (x, out)')
   end block
+
+  !----------------------------------------
+  ! Test intersections
+  !----------------------------------------
+  
 contains
 
   subroutine super_test(name)
