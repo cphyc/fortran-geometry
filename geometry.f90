@@ -14,7 +14,7 @@ module CylinderGeometry
      real(dp), dimension(3) :: normal3
      real(dp) :: r, h
    contains
-     procedure :: check => cylinderCheck
+     procedure :: setup => cylinderSetup
      procedure :: intersectionVolume
      procedure :: volume => cylinderVolume
      procedure :: draw => cylinderDraw
@@ -29,7 +29,7 @@ module CylinderGeometry
      real(dp), dimension(3) :: normal3
      real(dp) :: a
    contains
-     procedure :: check => cubeCheck
+     procedure :: setup => cubeSetup
      procedure :: volume => cubeVolume
      procedure :: draw => cubeDraw
      procedure :: contains => cubeContains
@@ -60,7 +60,7 @@ contains
     volume = self%a**3
   end function cubeVolume
 
-  function cubeCheck(self) result (valid)
+  function cubeSetup(self) result (valid)
     class(Cube_t) :: self
     logical ::valid
 
@@ -83,9 +83,9 @@ contains
          self%normal1(1)*self%normal2(2) - self%normal1(2)*self%normal2(1) &
          /)
     valid = .true.
-  end function cubeCheck
+  end function cubeSetup
 
-  function cylinderCheck(self) result(valid)
+  function cylinderSetup(self) result(valid)
     class(Cylinder_t) :: self
     logical :: valid
 
@@ -113,7 +113,7 @@ contains
          /)
     valid = .true.
 
-  end function cylinderCheck
+  end function cylinderSetup
 
   subroutine cylinderProject(self, pt, ptOut)
     class(Cylinder_t) :: self
@@ -158,13 +158,13 @@ contains
     ! Project point in local ref
     call self%project(pt, ptLoc)
 
-    ! Check point height
+    ! Setup point height
     if (abs(ptLoc%z) > self%h) then
        res = .false.
        return
     end if
 
-    ! Check point radius
+    ! Setup point radius
     if (ptLoc%r > self%r) then
        res = .false.
        return
