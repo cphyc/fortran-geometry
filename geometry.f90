@@ -34,6 +34,7 @@ module CylinderGeometry
      procedure :: draw => cubeDraw
      procedure :: contains => cubeContains
      procedure :: project => cubeProject
+     procedure :: corners => cubeCorners
   end type Cube_t
 
   type ptCube_t
@@ -147,6 +148,25 @@ contains
     ptOut%y = dot_product(self%normal2, tmpPt)
     ptOut%z = dot_product(self%normal3, tmpPt)
   end subroutine cubeProject
+
+  function cubeCorners(self) result(pt)
+    class(Cube_t), intent(in) :: self
+    real(dp), dimension(8, 3) :: pt
+
+    integer :: i, j, k
+
+    do k = 0, 1
+       do j = 0, 1
+          do i = 0, 1
+             pt(1 + i + 2*j + 4*k, :) = self%center + &
+                  self%normal1 * (i - 0.5_dp) * self%a + &
+                  self%normal2 * (j - 0.5_dp) * self%a + &
+                  self%normal3 * (k - 0.5_dp) * self%a
+          end do
+       end do
+    end do
+
+  end function cubeCorners
 
   function cylinderContains(self, pt) result (res)
     class(Cylinder_t) :: self
