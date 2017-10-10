@@ -1,4 +1,4 @@
-FFLAGS=-std=f2008 --warn-all -Ofast
+FFLAGS=-std=f2008 --warn-all -Ofast -fimplicit-none
 FCC=gfortran
 
 all: test run_test

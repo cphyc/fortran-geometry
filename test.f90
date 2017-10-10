@@ -4,11 +4,14 @@ program test
        stdout=>output_unit, &
        stderr=>error_unit
 
+  implicit none
+
   type(Cylinder_t) :: cyl
   type(Cube_t) :: cube
 
-  logical :: intersect
-  real(dp) :: volume
+  integer :: niter
+
+  call get_niter(niter)
 
   cyl%center = (/1., 1., 1./)
   cyl%r = 1.0
@@ -75,7 +78,7 @@ program test
     call assert(.not. cyl%contains(tmp), 'Point close to cap (out) (2)')
   end block
   ! Check volumes
-  call assert(is_close(cyl%volume(), cyl%r**2 * pi * cyl%h, 1d-10), &
+  call assert(is_close(cyl%volume(), cyl%r**2 * 3.14156 * cyl%h, 1d-10), &
        "volume")
 
   !----------------------------------------
