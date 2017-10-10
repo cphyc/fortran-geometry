@@ -5,8 +5,8 @@ module CylinderGeometry
 
   integer, parameter :: dp = selected_real_kind(15)
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
-  integer :: niter = 1000
   integer, parameter :: MAX_DEPTH = 10
+  integer :: niter = 1000
 
   type :: Cylinder_t
      real(dp), dimension(3) :: center
@@ -368,16 +368,6 @@ contains
             newCornersRight(3, :) = (corners(3, :) + corners(7, :)) / 2
             newCornersRight(4, :) = (corners(4, :) + corners(8, :)) / 2
          end if
-         ! print*, 'Depth  Corners left'
-         ! do i = 1, 8
-         !    print*, depth, newCornersLeft(i, :)
-         ! end do
-         ! print*, 'Depth  Corners right'
-         ! do i = 1, 8
-         !    print*, depth, newCornersRight(i, :)
-         ! end do
-         ! print*, '========', nin
-
          call divide(newCornersLeft, depth+1, mod(splitDim, 3) + 1, volume)
          call divide(newCornersRight, depth+1, mod(splitDim, 3) + 1, volume)
       end if
