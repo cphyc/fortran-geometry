@@ -6,6 +6,7 @@ module CylinderGeometry
   integer, parameter :: dp = selected_real_kind(15)
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
   integer :: niter = 1000
+  integer, parameter :: MAX_DEPTH = 10
 
   type :: Cylinder_t
      real(dp), dimension(3) :: center
@@ -260,6 +261,149 @@ contains
 
     real(dp) :: d2, Vcyl, Vcube
     real(dp), dimension(3) :: pt
+    integer :: nin, ntot, i, j, k
+
+    real(dp) :: corners(8, 3)
+
+
+    d2 = max(cyl%r, cyl%h)**2 + 3*cube%a**2
+
+    ! If centers too far, just return
+    if (sum((cyl%center - cube%center)**2) > d2) then
+       intersect = .false.
+       volume = 0.0_dp
+    end if
+
+    ! Volumes may overlap. Draw random points from the smallest volume
+    nin = 0
+    ntot = 0
+
+    Vcyl = cyl%volume()
+    Vcube = cube%volume()
+    if (Vcyl < Vcube) then
+       do while (ntot < niter)
+          pt = cyl%draw()
+          ntot = ntot + 1
+          if (cube%contains(pt)) then
+             nin = nin + 1
+          end if
+       end do
+       volume = Vcyl * nin / ntot
+    else
+       corners = cube%corners()
+       volume = 0._dp
+       call divide(corners, 1, 1, volume)
+    end if
+
+    intersect = volume > 0._dp
+
+  contains
+    recursive subroutine divide(corners, depth, splitDim, volume)
+      ! Corners are given as follow
+      !       7 +--------+ 8
+      !        /|       /|
+      !     5 +------- +6|          z
+      !       | |      | |          ^
+      !       |3+------|-+ 4        | /y
+      !       |/       |/           |/
+      !     1 +--------+ 2          +----> x
+
+      real(dp), intent(in) :: corners(8, 3) ! The location of the corners
+      integer, intent(in) :: depth
+      real(dp), intent(inout) :: volume ! The volume
+      integer, intent(in) :: splitDim   ! The dimension for the next split
+
+      real(dp) :: newCornersLeft(8, 3), newCornersRight(8, 3), tmpVolume
+
+      integer :: i, nin
+      logical :: inside(8)
+      nin = 0
+
+      ! print*, 'in divide', depth, splitDim
+      ! Count the number of corners in/out
+      do i = 1, 8
+         if (cyl%contains(corners(i, :))) then
+            nin = nin + 1
+            inside(i) = .true.
+         end if
+      end do
+
+      ! If all points are within cylinder, the volume is the volume of the box
+      if (nin == 8) then                ! Box inside volume
+         call compute_volume(corners, volume)
+      else if (depth == MAX_DEPTH) then ! Estimate volume by number of corners
+         call compute_volume(corners, tmpVolume)
+         volume = volume + tmpVolume * nin / 8
+      else
+         newCornersLeft = corners
+         newCornersRight = corners
+         if (splitDim == 1) then         ! Split along x direction
+            newCornersLeft(2, :) = (corners(1, :) + corners(2, :)) / 2
+            newCornersLeft(4, :) = (corners(3, :) + corners(4, :)) / 2
+            newCornersLeft(6, :) = (corners(5, :) + corners(6, :)) / 2
+            newCornersLeft(8, :) = (corners(7, :) + corners(8, :)) / 2
+
+            newCornersRight(1, :) = (corners(1, :) + corners(2, :)) / 2
+            newCornersRight(3, :) = (corners(3, :) + corners(4, :)) / 2
+            newCornersRight(5, :) = (corners(5, :) + corners(6, :)) / 2
+            newCornersRight(7, :) = (corners(7, :) + corners(8, :)) / 2
+         else if (splitDim == 2) then  ! Split along y direction
+            newCornersLeft(3, :) = (corners(1, :) + corners(3, :)) / 2
+            newCornersLeft(4, :) = (corners(2, :) + corners(4, :)) / 2
+            newCornersLeft(7, :) = (corners(5, :) + corners(7, :)) / 2
+            newCornersLeft(8, :) = (corners(6, :) + corners(8, :)) / 2
+
+            newCornersRight(1, :) = (corners(1, :) + corners(3, :)) / 2
+            newCornersRight(2, :) = (corners(2, :) + corners(4, :)) / 2
+            newCornersRight(5, :) = (corners(5, :) + corners(7, :)) / 2
+            newCornersRight(6, :) = (corners(6, :) + corners(8, :)) / 2
+         else                          ! Split along z direction
+            newCornersLeft(5, :) = (corners(1, :) + corners(5, :)) / 2
+            newCornersLeft(6, :) = (corners(2, :) + corners(6, :)) / 2
+            newCornersLeft(7, :) = (corners(3, :) + corners(7, :)) / 2
+            newCornersLeft(8, :) = (corners(4, :) + corners(8, :)) / 2
+
+            newCornersRight(1, :) = (corners(1, :) + corners(5, :)) / 2
+            newCornersRight(2, :) = (corners(2, :) + corners(6, :)) / 2
+            newCornersRight(3, :) = (corners(3, :) + corners(7, :)) / 2
+            newCornersRight(4, :) = (corners(4, :) + corners(8, :)) / 2
+         end if
+         ! print*, 'Depth  Corners left'
+         ! do i = 1, 8
+         !    print*, depth, newCornersLeft(i, :)
+         ! end do
+         ! print*, 'Depth  Corners right'
+         ! do i = 1, 8
+         !    print*, depth, newCornersRight(i, :)
+         ! end do
+         ! print*, '========', nin
+
+         call divide(newCornersLeft, depth+1, mod(splitDim, 3) + 1, volume)
+         call divide(newCornersRight, depth+1, mod(splitDim, 3) + 1, volume)
+      end if
+
+    end subroutine divide
+
+    subroutine compute_volume(corners, volume)
+      real(dp), intent(in) :: corners(8, 3) ! The location of the corners
+      real(dp), intent(out) :: volume
+
+      volume = sqrt(&
+           dot_product(corners(2, :) - corners(1, :), corners(2, :) - corners(1, :)) * &
+           dot_product(corners(3, :) - corners(1, :), corners(3, :) - corners(1, :)) * &
+           dot_product(corners(5, :) - corners(1, :), corners(5, :) - corners(1, :)))
+    end subroutine compute_volume
+
+  end subroutine intersectionVolume
+
+  subroutine intersectionVolumeMC(cyl, cube, volume, intersect)
+    class(Cylinder_t), intent(in) :: cyl
+    type(Cube_t), intent(in) :: cube
+    real(dp), intent(out) :: volume
+    logical, intent(out)  :: intersect
+
+    real(dp) :: d2, Vcyl, Vcube
+    real(dp), dimension(3) :: pt
     integer :: nin, ntot
 
 
@@ -299,7 +443,7 @@ contains
 
     intersect = volume > 0._dp
 
-  end subroutine intersectionVolume
+  end subroutine intersectionVolumeMC
 
   subroutine set_niter(n)
     integer, intent(in) :: n
