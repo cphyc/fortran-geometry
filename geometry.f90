@@ -57,7 +57,7 @@ contains
   function cylinderVolume(self) result (volume)
     class(Cylinder_t) :: self
     real(dp) :: volume
-    volume = self%r**2 * pi * self%h
+    volume = self%r**2 * pi * self%h * 2
   end function cylinderVolume
 
   function cubeVolume(self) result (volume)
