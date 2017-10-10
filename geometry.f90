@@ -1,7 +1,11 @@
 module CylinderGeometry
 
+  use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
+       stdout=>output_unit, &
+       stderr=>error_unit
+
   implicit none
-  ! private
+  private
 
   integer, parameter :: dp = selected_real_kind(15)
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
@@ -253,18 +257,28 @@ contains
   end function cubeDraw
 
 
-  subroutine intersectionVolume(cyl, cube, volume, intersect)
+  subroutine intersectionVolume(cyl, cube, volume, intersect, method)
     class(Cylinder_t), intent(in) :: cyl
     type(Cube_t), intent(in) :: cube
     real(dp), intent(out) :: volume
     logical, intent(out)  :: intersect
+    character(len=*), intent(in), optional :: method
 
     real(dp) :: d2, Vcyl, Vcube
     real(dp), dimension(3) :: pt
-    integer :: nin, ntot, i, j, k
+    integer :: nin, ntot
 
     real(dp) :: corners(8, 3)
 
+    if (present(method)) then
+       if (method == 'MC') then
+          call intersectionVolumeMC(cyl, cube, volume, intersect)
+          return
+       else if (method /= 'bisect') then
+          write(stderr, *) 'Unknown method. Aborting.'
+          stop
+       end if
+    end if
 
     d2 = max(cyl%r, cyl%h)**2 + 3*cube%a**2
 
