@@ -6,6 +6,7 @@ program test
 
   implicit none
 
+  real(dp) :: pi = atan(1._dp) * 4._dp
   type(Cylinder_t) :: cyl
   type(Cube_t) :: cube
 
@@ -78,7 +79,7 @@ program test
     call assert(.not. cyl%contains(tmp), 'Point close to cap (out) (2)')
   end block
   ! Check volumes
-  call assert(is_close(cyl%volume(), cyl%r**2 * 3.14156 * cyl%h, 1d-10), &
+  call assert(is_close(cyl%volume(), cyl%r**2 * pi * cyl%h, 1d-14o), &
        "volume")
 
   !----------------------------------------
