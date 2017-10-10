@@ -9,7 +9,7 @@ module CylinderGeometry
 
   integer, parameter :: dp = selected_real_kind(15)
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
-  integer, parameter :: MAX_DEPTH = 10
+  integer :: MAX_DEPTH = 10
   integer :: niter = 1000
 
   type :: Cylinder_t
@@ -51,13 +51,57 @@ module CylinderGeometry
   end type ptCylinder_t
 
   public :: set_niter, get_niter, Cylinder_t, Cube_t, dp, ptCube_t, ptCylinder_t
+  public :: set_depth, get_depth, intersect
 
 contains
+
+  function intersect(cube, cyl)
+    logical :: intersect
+    type(Cylinder_t), intent(in) :: cyl
+    type(Cube_t), intent(in) :: cube
+
+    real(dp) :: d2, corners(8, 3)
+    integer :: i
+
+    d2 = max(cyl%r, cyl%h)**2 + 3*cube%a**2
+
+    ! If centers too far, just return
+    if (sum((cyl%center - cube%center)**2) > d2) then
+       intersect = .false.
+       return
+    end if
+
+    ! If any point of cube in cylinder, intersection is true
+    corners = cube%corners()
+    do i = 1, 8
+       if (cyl%contains(corners(i, :))) then
+          intersect = .true.
+          return
+       end if
+    end do
+
+    ! If cylinder center in cube
+    if (cube%contains(cyl%center)) then
+       intersect = .true.
+       return
+    end if
+
+    ! If the cube is bigger than the cylinder
+    ! Case 1: the cube can be inside the cylinder
+    if (cube%a < min(cyl%r, cyl%h)) then
+       ! Case 2: the cube may contain the cylinder
+       
+    else if (cube%a > max(cyl%r, cyl%h)) then
+       ! Case 3: none of the above
+       ! the cube's size is between the radius and heigth of the cylinder
+    end if
+
+  end function intersect
 
   function cylinderVolume(self) result (volume)
     class(Cylinder_t) :: self
     real(dp) :: volume
-    volume = self%r**2 * pi * self%h * 2
+    volume = self%r**2 * pi * self%h
   end function cylinderVolume
 
   function cubeVolume(self) result (volume)
@@ -271,10 +315,10 @@ contains
     real(dp) :: corners(8, 3)
 
     if (present(method)) then
-       if (method == 'MC') then
+       if (trim(method) == 'MC') then
           call intersectionVolumeMC(cyl, cube, volume, intersect)
           return
-       else if (method /= 'bisect') then
+       else if (trim(method) /= 'bisect') then
           write(stderr, *) 'Unknown method. Aborting.'
           stop
        end if
@@ -288,26 +332,10 @@ contains
        volume = 0.0_dp
     end if
 
-    ! Volumes may overlap. Draw random points from the smallest volume
-    nin = 0
-    ntot = 0
-
-    Vcyl = cyl%volume()
-    Vcube = cube%volume()
-    if (Vcyl < Vcube) then
-       do while (ntot < niter)
-          pt = cyl%draw()
-          ntot = ntot + 1
-          if (cube%contains(pt)) then
-             nin = nin + 1
-          end if
-       end do
-       volume = Vcyl * nin / ntot
-    else
-       corners = cube%corners()
-       volume = 0._dp
-       call divide(corners, 1, 1, volume)
-    end if
+    ! Volumes may overlap
+    corners = cube%corners()
+    volume = 0._dp
+    call divide(corners, 1, 1, volume)
 
     intersect = volume > 0._dp
 
@@ -329,16 +357,13 @@ contains
 
       real(dp) :: newCornersLeft(8, 3), newCornersRight(8, 3), tmpVolume
 
-      integer :: i, nin
-      logical :: inside(8)
+      integer :: i, nin, newDim
       nin = 0
 
-      ! print*, 'in divide', depth, splitDim
       ! Count the number of corners in/out
       do i = 1, 8
          if (cyl%contains(corners(i, :))) then
             nin = nin + 1
-            inside(i) = .true.
          end if
       end do
 
@@ -382,8 +407,9 @@ contains
             newCornersRight(3, :) = (corners(3, :) + corners(7, :)) / 2
             newCornersRight(4, :) = (corners(4, :) + corners(8, :)) / 2
          end if
-         call divide(newCornersLeft, depth+1, mod(splitDim, 3) + 1, volume)
-         call divide(newCornersRight, depth+1, mod(splitDim, 3) + 1, volume)
+         newDim = mod(splitDim, 3) + 1
+         call divide(newCornersLeft, depth+1, newDim, volume)
+         call divide(newCornersRight, depth+1, newDim, volume)
       end if
 
     end subroutine divide
@@ -454,9 +480,20 @@ contains
     niter = n
   end subroutine set_niter
 
-subroutine get_niter(n)
+  subroutine get_niter(n)
     integer, intent(out) :: n
     n = niter
   end subroutine get_niter
+
+
+  subroutine set_depth(d)
+    integer, intent(in) :: d
+    MAX_DEPTH = d
+  end subroutine set_depth
+
+  subroutine get_depth(d)
+    integer, intent(out) :: d
+    d = MAX_DEPTH
+  end subroutine get_depth
 
 end module CylinderGeometry
