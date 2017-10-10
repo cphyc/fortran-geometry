@@ -162,79 +162,115 @@ program test
   !----------------------------------------
   ! Test intersections
   !----------------------------------------
-  call super_test('Intersections')
-  ! Setup a unit-cylinder along the z axis
-  cyl%center = (/0., 0., 0./)
-  cyl%r = 1.0
-  cyl%h = 1.0
-  cyl%normal1 = (/0., 0., 1./)
-  if (.not. cyl%setup()) call yolo()
-
-  ! Setup a cube and move it along
-  cube%center = (/0., 0., 0./)
-  cube%a = 0.5
-  cube%normal1 = (/1, 5, 0/)
-  cube%normal2 = (/-5, 1, 0/)
-  if (.not. cube%setup()) call yolo()
 
   ! The cube is within the cylinder -> volume = cube volume
   block
-    real(dp) :: volume
+    real(dp) :: volume, prec
     logical :: intersect
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cube%volume(), 1d-10), "volume (cube in cylinder)")
-    call assert(intersect, "Detection", .true.)
+    character(len=10) :: method
+    integer :: i, depth, niter
+    do i = 0, 1
+       if (i == 0) then
+          method = 'MC'
+          niter = 10000
+          call set_niter(niter)
+          prec = 2/sqrt(niter * 1._dp)
+       else
+          method = 'bisect'
+          depth = 10
+          call set_depth(depth)
+          prec = 1._dp / (2**depth)
+       end if
 
-    ! Move cube (very close to boundary)
-    cube%center = (/cyl%r - sqrt(3._dp) * cube%a, 0._dp, 0._dp/)
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cube%volume(), 1d-10), &
-         "volume (cube in cylinder, not centered)")
-    call assert(intersect, "Detection", .true.)
+       ! Setup a unit-cylinder along the z axis
+       cyl%center = (/0., 0., 0./)
+       cyl%r = 1.0
+       cyl%h = 1.0
+       cyl%normal1 = (/0., 0., 1./)
+       if (.not. cyl%setup()) call yolo()
 
-    ! Move cube outstide
-    cube%center = (/2., 0., 0. /)
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, 0._dp, 1d-10), &
-         "volume (cube outside cylinder)")
-    call assert(.not. intersect, "Detection", .true.)
+       ! Setup a cube and move it along
+       cube%center = (/0., 0., 0./)
+       cube%a = 0.5
+       cube%normal1 = (/1, 5, 0/)
+       cube%normal2 = (/-5, 1, 0/)
+       if (.not. cube%setup()) call yolo()
 
-    ! Put a tiny cube at the boundary of the cylinder. The volume is
-    ! approx. 0.5 Vcube at ± 1/sqrt(N) (noise)
-    cube%a = 0.001
-    cube%normal1 = (/1, 0, 0/)
-    cube%normal2 = (/0, 1, 0/)
-    if (.not. cube%setup()) call yolo()
-    ! Put cube at boundary
-    cube%center = (/cyl%r, 0._dp, 0._dp/)
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cube%volume()/2, cube%volume()*2/sqrt(niter * 1._dp)), &
-         'volume (tiny cube on cylinder edge)')
-    call assert(intersect, "Detection", .true.)
 
-    ! Put a giant cube and a cylinder inside
-    cube%a = cyl%r * 10
-    cube%center = (/0, 0, 0/)
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cyl%volume(), 1.d-10), &
-         'volume (cylinder in cube)')
-    call assert(intersect, "Detection", .true.)
+       call super_test('intersections — method: ' // trim(method))
 
-    ! Move the cylinder to the cube's edge
-    ! The cylinder is half in the cube, half out -> volume should be half
-    cyl%center = (/cube%a/2, 0._dp, 0._dp/)
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cyl%volume()/2, cyl%volume()*2/sqrt(niter * 1._dp)), &
-         "volume (cylinder at cube's edge)")
-    call assert(intersect, "Detection", .true.)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
 
-    ! Tilt a little bit the cylinder
-    cyl%normal1 = (/0, 5, 10/)
-    if (.not. cyl%setup()) call yolo()
-    call cyl%intersectionVolume(cube, volume, intersect)
-    call assert(is_close(volume, cyl%volume()/2, cyl%volume()*2/sqrt(niter * 1._dp)), &
-         "volume (cylinder at cube's edge, tilted)")
-    call assert(intersect, "Detection", .true.)
+       call assert(is_close(volume, cube%volume(), 1d-14), "volume (cube in cylinder)")
+       call assert(intersect, "Detection", .true.)
+
+       ! Move cube (very close to boundary)
+       cube%center = (/cyl%r - sqrt(3._dp) * cube%a, 0._dp, 0._dp/)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       call assert(is_close(volume, cube%volume(), 1d-14), &
+            "volume (cube in cylinder, not centered)")
+       call assert(intersect, "Detection", .true.)
+
+       ! Move cube outside
+       cube%center = (/2., 0., 0. /)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       call assert(is_close(volume, 0._dp, 1d-14), &
+            "volume (cube outside cylinder)")
+       call assert(.not. intersect, "Detection", .true.)
+
+       ! Put a tiny cube at the boundary of the cylinder. The volume is
+       ! approx. 0.5 Vcube at ± 1/sqrt(N) (noise)
+       cube%a = 0.001_dp
+       cube%normal1 = (/1, 0, 0/)
+       cube%normal2 = (/0, 1, 0/)
+       if (.not. cube%setup()) call yolo()
+
+       ! Put cube at boundary
+       cube%center = (/cyl%r, 0._dp, 0._dp/)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       if (method == 'bisect') then
+          print*, cube%volume()/2, volume, cyl%volume(), prec
+          print*, cube%center, cyl%center
+          print*, cube%a, cyl%r, cyl%h
+          print*,
+       end if
+       call assert(is_close(volume, cube%volume()/2, prec*cube%volume()), &
+            'volume (tiny cube on cylinder edge)')
+       call assert(intersect, "Detection", .true.)
+
+       ! Put a giant cube and a cylinder inside
+       cube%a = cyl%r * 10
+       cube%center = (/0, 0, 0/)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       if (method == 'bisect') then
+          print*, cube%volume(), volume, cyl%volume()
+          print*, cube%center, cyl%center
+          print*, cube%a, cyl%r, cyl%h
+          print*,
+       end if
+       call assert(is_close(volume, cyl%volume(), prec*cyl%volume()), &
+            'volume (cylinder in cube)')
+       call assert(intersect, "Detection", .true.)
+
+       ! Move the cylinder to the cube's edge
+       ! The cylinder is half in the cube, half out -> volume should be half
+       cyl%center = (/cube%a/2, 0._dp, 0._dp/)
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       call assert(is_close(volume, cyl%volume()/2, &
+            cyl%volume()*prec), &
+            "volume (cylinder at cube's edge)")
+       call assert(intersect, "Detection", .true.)
+
+       ! Tilt a little bit the cylinder
+       cyl%normal1 = (/0, 5, 10/)
+       if (.not. cyl%setup()) call yolo()
+       call cyl%intersectionVolume(cube, volume, intersect, method=method)
+       call assert(is_close(volume, cyl%volume()/2, &
+            prec*cyl%volume()), &
+            "volume (cylinder at cube's edge, tilted)")
+       call assert(intersect, "Detection", .true.)
+    end do
+
   end block
 
 contains
@@ -249,6 +285,8 @@ contains
     character(len=*), intent(in) :: msg
     logical, intent(in), optional :: silent
 
+    integer, save :: itest = 1
+
     logical :: print_msg
 
     if (present(silent)) then
@@ -258,12 +296,13 @@ contains
     end if
 
     if (.not. bool) then
-       write(stdout, '(4x,a)') msg // '...failed!'
+       write(stdout, '(4x,i3,1x,a)') itest, msg // '...failed!'
        stop
     else
        if (print_msg) &
-            write(stdout, '(4x,a)') msg // '...ok!'
+            write(stdout, '(4x,i3,1x,a)') itest, msg // '...ok!'
     end if
+    itest = itest + 1
   end subroutine assert
 
   function is_close(A, B, aerr)
