@@ -50,7 +50,7 @@ module CylinderGeometry
      real(dp) :: r, z
   end type ptCylinder_t
 
-  public :: set_niter, Cylinder_t, Cube_t, dp
+  public :: set_niter, get_niter, Cylinder_t, Cube_t, dp, ptCube_t, ptCylinder_t
 
 contains
 
@@ -453,5 +453,10 @@ contains
     integer, intent(in) :: n
     niter = n
   end subroutine set_niter
+
+subroutine get_niter(n)
+    integer, intent(out) :: n
+    n = niter
+  end subroutine get_niter
 
 end module CylinderGeometry
