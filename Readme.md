@@ -43,11 +43,9 @@ end program test
 
 ## A note on the "algorithm"
 
-The "algorithm" is extremely poor for now: the code just takes the smallest volume out of the two volumes, draws random points within it and counts the ratio of points that fall in the other volume w.r.t. to the number of points drawn. As such, the convergence is in `1/sqrt(N)`, where `N` is the number of draws.
+There are two algorithms implemented to compute the intersection volume. The first one is using a Monte-Carlo based approach, where random points are drawn from within the smallest volume. The ratio of points also falling in the other one to the total number of points gives the relative volume of the intersection. The convergence is in `1/sqrt(N)`, where `N` is the number of draws. To use it, use the method `intersectionMethodMC`.
 
-As a side note, if the intersection volume is tiny w.r.t. the smallest volume, it is likely that you will get no point falling in the intersection and the code will erroneously report a non-existing intersection.
-
-You should this algorithm as a first attempt to get a quick-and-dirty answer. For more precise codes, it will probably be required to develop a more complex code.
+The other algorithms is a recursive one. At each step, it divides the box in two equal-sized boxes along one axis and calls itself recursively for the two subboxes. At each depth, the axis is changed (first split along the x axis, then along the y axis, then along the z axis). The algorithm stops at the maximal depth or when all the points of the box are within the cylinder.
 
 ## Need some more examples?
 
