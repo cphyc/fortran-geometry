@@ -2,7 +2,7 @@ program testOBBAndCapsule
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
-  use OBBAndCapsule
+  use distances
   use types
   use test_utils
   implicit none
