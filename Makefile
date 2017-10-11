@@ -8,11 +8,14 @@ all: test run_test
 %.o: %.f90
 	$(FCC) -c $(FFLAGS) $^ -o $@
 
-test: geometry.o test.o
+test: test_utils.o types.o geometry.o test.o
 	$(FCC) $(FFLAGS) $^ -o $@
 
-run_test: test
-	./test
+test_obb: test_utils.o types.o obbandcapsule.o test_obb.o
+	$(FCC) $(FFLAGS) $^ -o $@
+
+run_test: test_obb
+	./$^
 
 clean:
 	rm -rf *.o *.mod

@@ -7,7 +7,7 @@ module CylinderGeometry
   implicit none
   private
 
-  integer, parameter :: dp = selected_real_kind(15)
+  integer, parameter :: dp = selected_real_kind(15) !
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
   integer :: MAX_DEPTH = 10
   integer :: niter = 1000
@@ -355,7 +355,7 @@ contains
       real(dp), intent(inout) :: volume ! The volume
       integer, intent(in) :: splitDim   ! The dimension for the next split
 
-      real(dp) :: newCornersLeft(8, 3), newCornersRight(8, 3), tmpVolume
+      real(dp) :: newCornersRight(8, 3), newCornersLeft(8, 3), tmpVolume
 
       integer :: i, nin, newDim
       nin = 0
@@ -374,8 +374,7 @@ contains
          call compute_volume(corners, tmpVolume)
          volume = volume + tmpVolume * nin / 8
       else
-         newCornersLeft = corners
-         newCornersRight = corners
+         ! Check that the box's closest point
          if (splitDim == 1) then         ! Split along x direction
             newCornersLeft(2, :) = (corners(1, :) + corners(2, :)) / 2
             newCornersLeft(4, :) = (corners(3, :) + corners(4, :)) / 2

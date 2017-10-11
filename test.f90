@@ -1,5 +1,7 @@
 program test
   use CylinderGeometry
+  use test_utils
+  use types
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
@@ -79,7 +81,7 @@ program test
     call assert(.not. cyl%contains(tmp), 'Point close to cap (out) (2)')
   end block
   ! Check volumes
-  call assert(is_close(cyl%volume(), cyl%r**2 * pi * cyl%h, 1d-14o), &
+  call assert(is_close(cyl%volume(), cyl%r**2 * pi * cyl%h, 1d-14), &
        "volume")
 
   !----------------------------------------
@@ -170,14 +172,14 @@ program test
     character(len=10) :: method
     integer :: i, depth, niter
     do i = 0, 1
-       if (i == 0) then
+       if (i == 1) then
           method = 'MC'
           niter = 10000
           call set_niter(niter)
           prec = 2/sqrt(niter * 1._dp)
        else
           method = 'bisect'
-          depth = 10
+          depth = 4
           call set_depth(depth)
           prec = 1._dp / (2**depth)
        end if
@@ -275,50 +277,5 @@ program test
 
 contains
 
-  subroutine super_test(name)
-    character(len=*), intent(in) :: name
-    write(stdout, *) 'Testing ' // name
-  end subroutine super_test
-
-  subroutine assert(bool, msg, silent)
-    logical, intent(in) :: bool
-    character(len=*), intent(in) :: msg
-    logical, intent(in), optional :: silent
-
-    integer, save :: itest = 1
-
-    logical :: print_msg
-
-    if (present(silent)) then
-       print_msg = .not. silent
-    else
-       print_msg = .true.
-    end if
-
-    if (.not. bool) then
-       write(stdout, '(4x,i3,1x,a)') itest, msg // '...failed!'
-       stop
-    else
-       if (print_msg) &
-            write(stdout, '(4x,i3,1x,a)') itest, msg // '...ok!'
-    end if
-    itest = itest + 1
-  end subroutine assert
-
-  function is_close(A, B, aerr)
-    real(dp), intent(in) :: A, B, aerr
-    logical :: is_close
-
-    if (abs(A - B) < aerr) then
-       is_close = .true.
-    else
-       is_close = .false.
-    end if
-  end function is_close
-
-  subroutine yolo
-    write(stderr, *) 'An error occured. Crashing.'
-    stop
-  end subroutine yolo
 end program test
 
