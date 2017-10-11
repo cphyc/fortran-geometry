@@ -8,7 +8,7 @@ module CylinderGeometry
   private
 
   integer, parameter :: dp = selected_real_kind(15) !
-  real(dp), parameter :: pi = atan(1._dp) * 4._dp
+
   integer :: MAX_DEPTH = 10
   integer :: niter = 1000
 

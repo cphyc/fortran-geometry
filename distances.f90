@@ -2,11 +2,12 @@ module distances
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
-
+  use utils
   use types
   implicit none
   private
   public :: LineOBBDistanceSquared, LineSegmentOBBDistanceSquared, PointOBBDistanceSquared, CapsuleOBBDistanceSquared
+  public :: PointLineDistanceSquared, PointLineSegDistanceSquared
 
 contains
   subroutine CapsuleOBBDistanceSquared(box, capsule, d2)
@@ -481,24 +482,23 @@ contains
 
   end subroutine PointOBBDistanceSquared
 
-  subroutine PointLineDistanceSquared(line, Q, t, d2)
+  subroutine PointLineDistanceSquared(line, point, t, d2)
     type(Line_t), intent(in) :: line
-    real(dp), intent(in) :: Q(3)
+    real(dp), intent(in), dimension(3) :: point
 
     real(dp), intent(out) :: d2, t
 
     real(dp) :: qPrime(3), vec(3)
 
-    t = dot_product(line%direction, Q - line%direction)
-    qPrime = line%origin + t * line%direction
-    vec = Q - qPrime
-
+    t = dot_product(line%direction, point - line%origin) / norm(line%direction)
+    qPrime = line%origin + t * line%direction / norm(line%direction)
+    vec = point - qPrime
     d2 = dot_product(vec, vec)
   end subroutine PointLineDistanceSquared
 
   subroutine PointLineSegDistanceSquared(segment, point, t, d2)
     type(Segment_t), intent(in) :: segment
-    real(dp), intent(in) :: point
+    real(dp), intent(in), dimension(3) :: point
 
     real(dp), intent(out) :: d2, t
 
@@ -509,8 +509,7 @@ contains
     line%direction = segment%end - segment%start
 
     call PointLineDistanceSquared(line, point, t, d2)
-
-    if (t < 0)then
+    if (t < 0) then
        t = 0
        vec = point - segment%start
        d2 = dot_product(vec, vec)
@@ -521,19 +520,6 @@ contains
     end if
 
   end subroutine PointLineSegDistanceSquared
-
-  real(dp) function norm(A) result(L)
-    real(dp), intent(in) :: A(:)
-
-    L = sqrt(dot_product(A, A))
-  end function norm
-
-  elemental integer function next_axis(axis) result(next)
-    integer, intent(in) :: axis
-
-    ! This maps 3->1, 1->2 and 2->3
-    next = mod(axis, 3) + 1
-  end function next_axis
 
 end module distances
 
