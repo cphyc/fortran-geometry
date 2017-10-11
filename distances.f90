@@ -481,6 +481,47 @@ contains
 
   end subroutine PointOBBDistanceSquared
 
+  subroutine PointLineDistanceSquared(line, Q, t, d2)
+    type(Line_t), intent(in) :: line
+    real(dp), intent(in) :: Q(3)
+
+    real(dp), intent(out) :: d2, t
+
+    real(dp) :: qPrime(3), vec(3)
+
+    t = dot_product(line%direction, Q - line%direction)
+    qPrime = line%origin + t * line%direction
+    vec = Q - qPrime
+
+    d2 = dot_product(vec, vec)
+  end subroutine PointLineDistanceSquared
+
+  subroutine PointLineSegDistanceSquared(segment, point, t, d2)
+    type(Segment_t), intent(in) :: segment
+    real(dp), intent(in) :: point
+
+    real(dp), intent(out) :: d2, t
+
+    type(Line_t) :: line
+    real(dp) :: vec(3)
+
+    line%origin = segment%start
+    line%direction = segment%end - segment%start
+
+    call PointLineDistanceSquared(line, point, t, d2)
+
+    if (t < 0)then
+       t = 0
+       vec = point - segment%start
+       d2 = dot_product(vec, vec)
+    else if (t > 1) then
+       t = 1
+       vec = point - segment%end
+       d2 = dot_product(vec, vec)
+    end if
+
+  end subroutine PointLineSegDistanceSquared
+
   real(dp) function norm(A) result(L)
     real(dp), intent(in) :: A(:)
 
