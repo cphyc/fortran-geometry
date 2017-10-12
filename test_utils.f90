@@ -4,7 +4,7 @@ module test_utils
        stderr=>error_unit
   use types
   implicit none
-  integer :: test_depth = 0
+  integer :: test_depth = 0, NTEST_OK, NTEST
 contains
   subroutine test_group(name)
     character(len=*), intent(in) :: name
@@ -31,6 +31,8 @@ contains
     integer :: i
     logical :: print_msg
 
+    NTEST = NTEST + 1
+    if (bool) NTEST_OK = NTEST_OK + 1
     if (present(silent)) then
        print_msg = .not. silent
     else
@@ -43,7 +45,6 @@ contains
 
     if (.not. bool) then
        write(stdout, '(4x,i3,1x,a)') itest, msg // '...failed!'
-       stop
     else
        if (print_msg) &
             write(stdout, '(4x,i3,1x,a)') itest, msg // '...ok!'
@@ -64,6 +65,15 @@ contains
 
   subroutine yolo
     write(stderr, *) 'An error occured. Crashing.'
-    stop
+    stop 1
   end subroutine yolo
+
+  subroutine test_summary
+    write(*, '(i3,"/",i3," tests")') NTEST_OK, NTEST
+    if (NTEST /= NTEST_OK) then
+       ! Stop with an error code
+       stop 1
+    end if
+  end subroutine test_summary
+
 end module test_utils

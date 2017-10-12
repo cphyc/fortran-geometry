@@ -156,6 +156,8 @@ program test_volume
   ! call assert(is_close(&
   !      V, pi*capsule%r**2 * norm(capsule%segment%end - capsule%segment%start),&
   !      1d-14), 'capsule-cylinder in box, else outside')
+
+  call test_summary()
 contains
 
   subroutine reset(box, segment, capsule)
