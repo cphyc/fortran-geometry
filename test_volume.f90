@@ -163,10 +163,31 @@ program test_volume
 
   box%extents = (/2, 2, 2/)
   box%origin = (/0, 0, 0/)
+  ! TODO: better constrain on precision
+  call set_depth(6)
+  call CapsuleOBBVolume(box, capsule, V)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side (depth 6)')
+
+  call set_depth(9)
+  call CapsuleOBBVolume(box, capsule, V)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side (depth 9)')
+
   call set_depth(12)
   call CapsuleOBBVolume(box, capsule, V)
-  print*, pi/2*capsule%r**2 * 4, V
-  call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side')
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 3d-2*V), 'Capsule on box side (depth 12)')
+
+  call set_depth(15)
+  call CapsuleOBBVolume(box, capsule, V)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-2*V), 'Capsule on box side (depth 15)')
+
+  call set_depth(18)
+  call CapsuleOBBVolume(box, capsule, V)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 3d-3*V), 'Capsule on box side (depth 18)')
+
+  call set_depth(21)
+  call CapsuleOBBVolume(box, capsule, V)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-3*V), 'Capsule on box side (depth 21)')
+
 
   call test_summary()
 contains
