@@ -22,4 +22,15 @@ contains
     write(*, *) msg
   end subroutine write_padding
 
+  function vector_product(u, v) result(w)
+    real(dp), intent(in), dimension(3) :: u, v
+    real(dp), dimension(3) :: w
+
+    w = [&
+         u(2)*v(3) - u(3)*v(2), &
+         u(3)*v(1) - u(1)*v(3), &
+         u(1)*v(2) - u(2)*v(1)  &
+         ]
+  end function vector_product
+
 end module geom_utils
