@@ -18,7 +18,7 @@ contains
     call LineSegmentOBBDistanceSquared(box, capsule%segment, d2)
 
     ! Get min distance - capsule's sphere radius
-    d2 = max(d2-capsule%r, 0._dp)
+    d2 = max(d2-capsule%r**2, 0._dp)
 
   end subroutine CapsuleOBBDistanceSquared
 
