@@ -4,9 +4,12 @@ module volumes
   use utils
   private
 
-  integer :: MAX_DEPTH = 12
-  public :: CapsuleOBBVolume, CapsuleContains, CapsuleVolume
-  public :: BoxVolume
+  integer :: MAX_DEPTH = 9
+  public :: CapsuleOBBVolume
+  public :: BoxContains, CapsuleContains
+  public :: BoxVolume, CapsuleVolume
+
+  public :: set_depth, get_depth
 contains
   subroutine CapsuleOBBVolume(box, capsule, V)
     ! Compute the volume of the intersection of a box with a capsule
@@ -40,7 +43,7 @@ contains
 
       real(dp) :: point(3)
 
-      logical, parameter :: debug = .true.
+      logical, parameter :: debug = .false.
       character(len=1) :: ikey(3)
 
       ! Compute distance from box to capsule
@@ -74,6 +77,7 @@ contains
             ! Estimate volume by number of points in volume
             V = V + BoxVolume(box) * nin / 8._dp
             if (debug) call write_padding(depth, 'max depth')
+
             ! if (debug) &
             ! write(*, '(3(es14.7, 2x),i3)') &
             !      box%origin, nin
@@ -109,6 +113,9 @@ contains
 
   end subroutine CapsuleOBBVolume
 
+  !----------------------------------------
+  ! Containing functions
+  !----------------------------------------
   logical function CapsuleContains(capsule, point) result(inside)
     type(Capsule_t), intent(in) :: capsule
     real(dp), intent(in) :: point(3)
@@ -116,10 +123,38 @@ contains
     real(dp) :: t, d2
 
     call PointLineSegDistanceSquared(capsule%segment, point, t, d2)
+    ! print*, t, sqrt(d2)
     inside = d2 <= capsule%r**2
 
   end function CapsuleContains
 
+  logical function BoxContains(box, point) result(inside)
+    type(OBB_t), intent(in) :: box
+    real(dp), intent(in) :: point(3)
+
+    real(dp) :: vec(3)
+    integer :: idim
+
+    ! Project on 3 axis
+    vec = (/ &
+         dot_product(box%u, point) / box%extents(1), &
+         dot_product(box%v, point) / box%extents(2), &
+         dot_product(box%w, point) / box%extents(3)  &
+         /)
+
+    inside = .true.
+    do idim = 1, 3
+       if (vec(idim) < -1._dp .or. vec(idim) > 1._dp) then
+          inside = .false.
+          return
+       end if
+    end do
+
+  end function BoxContains
+
+  !----------------------------------------
+  ! Volume functions
+  !----------------------------------------
   real(dp) function CapsuleVolume(capsule) result(volume)
     type(Capsule_t), intent(in) :: capsule
 
@@ -136,5 +171,19 @@ contains
     ! Each extent is the half extent
     volume = box%extents(1) * box%extents(2) * box%extents(3) * 8
   end function BoxVolume
+
+  !----------------------------------------
+  ! Setter/getter
+  !----------------------------------------
+  subroutine set_depth(depth)
+    integer, intent(in) :: depth
+
+    MAX_DEPTH = depth
+  end subroutine set_depth
+
+  subroutine get_depth(depth)
+    integer, intent(out) :: depth
+    depth = MAX_DEPTH
+  end subroutine get_depth
 
 end module volumes
