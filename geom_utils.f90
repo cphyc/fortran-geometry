@@ -1,5 +1,5 @@
-module utils
-  use types
+module geom_utils
+  use geom_types
   implicit none
 
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
@@ -22,4 +22,4 @@ contains
     write(*, *) msg
   end subroutine write_padding
 
-end module utils
+end module geom_utils

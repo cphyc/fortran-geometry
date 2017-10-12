@@ -1,4 +1,4 @@
-module types
+module geom_types
   implicit none
   integer, parameter :: dp = selected_real_kind(15)
 
@@ -6,11 +6,11 @@ module types
      real(dp), dimension(3) :: pos
   end type Point_t
 
-  type OBB_t
+  type Box_t
      real(dp), dimension(3) :: origin ! Center
      real(dp), dimension(3) :: u, v, w
      real(dp), dimension(3) :: extents
-  end type OBB_t
+  end type Box_t
 
   type Segment_t
      real(dp), dimension(3) :: start, end
@@ -26,4 +26,4 @@ module types
      real(dp) :: r
   end type Capsule_t
 
-end module types
+end module geom_types

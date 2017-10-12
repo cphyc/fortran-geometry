@@ -7,10 +7,10 @@ all: run_test
 %.o: %.f90
 	$(FCC) -c $(FFLAGS) $^ -o $@
 
-test_obb: types.o  utils.o test_utils.o distances.o test_obb.o
+test_obb: geom_types.o  geom_utils.o test_utils.o geom_distances.o test_obb.o
 	$(FCC) $(FFLAGS) $^ -o $@
 
-test_volumes: types.o utils.o test_utils.o distances.o volumes.o test_volume.o
+test_volumes: geom_types.o geom_utils.o test_utils.o geom_distances.o geom_volumes.o test_volume.o
 	$(FCC) $(FFLAGS) $^ -o $@
 
 run_%: %
