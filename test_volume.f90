@@ -188,6 +188,47 @@ program test_volume
   call CapsuleOBBVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-3*V), 'Capsule on box side (depth 21)')
 
+  call test_group_close()
+!----------------------------------------
+  ! Volumes
+  !----------------------------------------
+  call test_group('Integrate')
+  call reset(box, segment, capsule)
+  capsule%r = 3
+  call CapsuleOBBIntegrate(box, capsule, V, dummyx2)
+  call assert(is_close(V, BoxVolume(box) * 2, 1d-14), 'box in capsule')
+
+  call reset(box, segment, capsule)
+  capsule%segment%start = (/-10, -2, 0/)
+  capsule%segment%end = (/10, -2, 0/)
+  capsule%r = 2._dp
+
+  box%extents = (/2, 2, 2/)
+  box%origin = (/0, 0, 0/)
+  ! TODO: better constrain on precision
+  call set_depth(6)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 6)')
+
+  call set_depth(9)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 9)')
+
+  call set_depth(12)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4* 2, 3d-2*V), 'Capsule on box side (depth 12)')
+
+  call set_depth(15)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-2*V), 'Capsule on box side (depth 15)')
+
+  call set_depth(18)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 3d-3*V), 'Capsule on box side (depth 18)')
+
+  call set_depth(21)
+  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-3*V), 'Capsule on box side (depth 21)')
 
   call test_summary()
 contains
@@ -229,5 +270,10 @@ contains
     print*, '------------'
     print*, 'd=', sqrt(d2)
   end subroutine print_details
+
+  real(dp) function dummyx2(X)
+    real(dp), intent(in) :: X(3)
+    dummyx2 = 2._dp
+  end function dummyx2
 
 end program
