@@ -490,8 +490,8 @@ contains
 
     real(dp) :: qPrime(3), vec(3)
 
-    t = dot_product(line%direction, point - line%origin) / norm(line%direction)
-    qPrime = line%origin + t * line%direction / norm(line%direction)
+    t = dot_product(line%direction, point - line%origin) / dot_product(line%direction, line%direction)
+    qPrime = line%origin + t * line%direction
     vec = point - qPrime
     d2 = dot_product(vec, vec)
   end subroutine PointLineDistanceSquared
