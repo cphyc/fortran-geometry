@@ -23,7 +23,6 @@ module geom_volumes
 contains
   subroutine CapsuleBoxVolume(box, capsule, V)
     ! Compute the volume of the intersection of a box with a capsule
-
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     real(dp), intent(out) :: V
@@ -49,6 +48,13 @@ contains
 
   subroutine CapsuleBoxIntegrate(box, capsule, V, integrand)
     ! Compute the volume of the intersection of a box with a capsule
+    !
+    ! Note
+    ! ----
+    ! The integrand function is called with arguments in the frame of
+    ! the capsule. The starting point is at [0, 0, 0], the ending
+    ! point at [0, 0, L]
+
 
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
@@ -83,7 +89,7 @@ contains
     real(dp) :: dir(3), d2
     integer :: naxis, nin, i, j, k
 
-    real(dp) :: point(3), dV
+    real(dp) :: point(3), dV, u1(3), u2(3), u3(3)
 
     logical, parameter :: debug = .false.
     character(len=1) :: ikey(3)
@@ -109,13 +115,29 @@ contains
           end do
        end do
 
+       ! Convert position in capsule's frame
+       point = box%origin - capsule%segment%start
+
+       ! Build direct basis (z-axis along capsule segment)
+       u3 = capsule%segment%end - capsule%segment%start
+       u3 = u3 / norm2(u3)
+       u1 = [&
+            -u3(2) - u3(3), &
+             u3(1) - u3(3), &
+             u3(1) + u3(2) &
+             ]
+       u1 = u1 / norm2(u1)
+       u2 = vector_product(u3, u1)
+       ! Project point on basis
+       point = [dot_product(u1, point), dot_product(u2, point), dot_product(u3, point)]
+
        if (nin == 8 .and. .not. force_refine) then
-          dV = BoxVolume(box) * callback(box%origin)
+          dV = BoxVolume(box) * callback(point)
           if (debug) call write_padding(depth, 'all inside')
           V = V + dV
        else if (depth == MAX_DEPTH) then
           ! Estimate volume by number of points in volume
-          dV = BoxVolume(box) * nin / 8._dp * callback(box%origin)
+          dV = BoxVolume(box) * nin / 8._dp * callback(point)
           V = V + dV
           if (debug) call write_padding(depth, 'max depth')
        else
