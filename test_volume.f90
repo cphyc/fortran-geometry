@@ -109,16 +109,11 @@ program test_volume
   call reset(box, segment, capsule)
   capsule%segment%start = (/-10, 0, 0/)
   capsule%segment%end = (/10, 0, 0/)
+  capsule%r = 1.d0
   call assert(CapsuleContains(capsule, (/0._dp, 0._dp, 0._dp/)), 'center of capsule')
   call assert(CapsuleContains(capsule, (/1._dp, 0._dp, 0._dp/)), 'in capsule')
   call assert(CapsuleContains(capsule, (/2._dp, 0._dp, 0._dp/)), 'side of capsule')
-  call assert(.not. CapsuleContains(capsule, (/-10.00001_dp, 0._dp, 0._dp/)), 'outside of capsule')
-
-  call assert(is_close(BoxVolume(box), 8._dp, 1d-14), 'box volume')
-
-  ! Set spherical capsule
-  capsule%segment%end = capsule%segment%start
-  call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3, 1d-14), 'capsule volume')
+  call assert(.not. CapsuleContains(capsule, (/-11.00001_dp, 0._dp, 0._dp/)), 'outside of capsule')
 
   call test_group_close()
 
@@ -126,6 +121,13 @@ program test_volume
   ! Volumes
   !----------------------------------------
   call test_group('Volumes')
+  call reset(box, segment, capsule)
+  call assert(is_close(BoxVolume(box), 8._dp, 1d-14), 'box volume')
+
+  ! Set spherical capsule
+  capsule%segment%end = capsule%segment%start
+  call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3, 1d-14), 'capsule volume')
+
   call reset(box, segment, capsule)
   call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3 &
        + pi * capsule%r**2 * norm(capsule%segment%end - capsule%segment%start),&
