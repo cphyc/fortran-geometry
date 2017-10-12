@@ -9,7 +9,7 @@ module geom_volumes
   integer :: MAX_DEPTH = 9
   public :: BoxContains, CapsuleContains
   public :: BoxVolume, CapsuleVolume
-  public :: CapsuleOBBVolume, CapsuleOBBIntegrate
+  public :: CapsuleBoxVolume, CapsuleBoxIntegrate
 
   public :: set_depth, get_depth
 
@@ -21,16 +21,16 @@ module geom_volumes
   end interface
 
 contains
-  subroutine CapsuleOBBVolume(box, capsule, V)
+  subroutine CapsuleBoxVolume(box, capsule, V)
     ! Compute the volume of the intersection of a box with a capsule
 
-    type(OBB_t), intent(in) :: box
+    type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     real(dp), intent(out) :: V
 
     real(dp) :: d2
 
-    call CapsuleOBBDistanceSquared(box, capsule, d2)
+    call CapsuleBoxDistanceSquared(box, capsule, d2)
 
     V = 0
     if (d2 > 0) then
@@ -45,12 +45,12 @@ contains
       real(dp), intent(in) :: X(3)
       dummy = 1._dp
     end function dummy
-  end subroutine CapsuleOBBVolume
+  end subroutine CapsuleBoxVolume
 
-  subroutine CapsuleOBBIntegrate(box, capsule, V, integrand)
+  subroutine CapsuleBoxIntegrate(box, capsule, V, integrand)
     ! Compute the volume of the intersection of a box with a capsule
 
-    type(OBB_t), intent(in) :: box
+    type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     real(dp), intent(out) :: V
 
@@ -58,7 +58,7 @@ contains
 
     real(dp) :: d2
 
-    call CapsuleOBBDistanceSquared(box, capsule, d2)
+    call CapsuleBoxDistanceSquared(box, capsule, d2)
 
     V = 0
     if (d2 > 0) then
@@ -68,17 +68,17 @@ contains
        ! Some interaction (capsule in box or the opposite)
        call divide(box, capsule, 1, 0, V, integrand)
     end if
-  end subroutine CapsuleOBBIntegrate
+  end subroutine CapsuleBoxIntegrate
 
   recursive subroutine divide(box, capsule, axis, depth, V, callback)
-    type(OBB_t), intent(in) :: box
+    type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     integer, intent(in) :: depth, axis
     procedure(callback_fun) :: callback
 
     real(dp), intent(inout) :: V
 
-    type(OBB_t) :: box1, box2
+    type(Box_t) :: box1, box2
     real(dp) :: dir(3), d2
     integer :: naxis, nin, i, j, k
 
@@ -88,7 +88,7 @@ contains
     character(len=1) :: ikey(3)
 
     ! Compute distance from box to capsule
-    call CapsuleOBBDistanceSquared(box, capsule, d2)
+    call CapsuleBoxDistanceSquared(box, capsule, d2)
     if (d2 > 0) then
        if (debug) call write_padding(depth, 'disjoint')
     else
@@ -163,7 +163,7 @@ contains
   end function CapsuleContains
 
   logical function BoxContains(box, point) result(inside)
-    type(OBB_t), intent(in) :: box
+    type(Box_t), intent(in) :: box
     real(dp), intent(in) :: point(3)
 
     real(dp) :: vec(3)
@@ -200,7 +200,7 @@ contains
   end function CapsuleVolume
 
   real(dp) function BoxVolume(box) result(volume)
-    type(OBB_t), intent(in) :: box
+    type(Box_t), intent(in) :: box
 
     ! Each extent is the half extent
     volume = box%extents(1) * box%extents(2) * box%extents(3) * 8

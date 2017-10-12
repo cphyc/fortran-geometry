@@ -6,24 +6,24 @@ module geom_distances
   use geom_types
   implicit none
   private
-  public :: LineOBBDistanceSquared, LineSegmentOBBDistanceSquared, PointOBBDistanceSquared, CapsuleOBBDistanceSquared
+  public :: LineBoxDistanceSquared, LineSegmentBoxDistanceSquared, PointBoxDistanceSquared, CapsuleBoxDistanceSquared
   public :: PointLineDistanceSquared, PointLineSegDistanceSquared
 
 contains
-  subroutine CapsuleOBBDistanceSquared(box, capsule, d2)
-    type(OBB_t), intent(in) :: box
+  subroutine CapsuleBoxDistanceSquared(box, capsule, d2)
+    type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     real(dp), intent(out) :: d2
 
-    call LineSegmentOBBDistanceSquared(box, capsule%segment, d2)
+    call LineSegmentBoxDistanceSquared(box, capsule%segment, d2)
 
     ! Get min distance - capsule's sphere radius
     d2 = max(d2-capsule%r**2, 0._dp)
 
-  end subroutine CapsuleOBBDistanceSquared
+  end subroutine CapsuleBoxDistanceSquared
 
-  subroutine LineSegmentOBBDistanceSquared(box, seg, d2)
-    type(OBB_t), intent(in) :: box
+  subroutine LineSegmentBoxDistanceSquared(box, seg, d2)
+    type(Box_t), intent(in) :: box
     type(Segment_t), intent(in) :: seg
     real(dp), intent(out) :: d2
 
@@ -33,17 +33,17 @@ contains
     line%origin = seg%start
     line%direction = seg%end - seg%start
 
-    call LineOBBDistanceSquared(box, line, d2, t)
+    call LineBoxDistanceSquared(box, line, d2, t)
 
     if (t < 0) then
-       call PointOBBDistanceSquared(box, seg%start, d2)
+       call PointBoxDistanceSquared(box, seg%start, d2)
     else if (t > 1) then
-       call PointOBBDistanceSquared(box, seg%end, d2)
+       call PointBoxDistanceSquared(box, seg%end, d2)
     end if
-  end subroutine LineSegmentOBBDistanceSquared
+  end subroutine LineSegmentBoxDistanceSquared
 
-  subroutine LineOBBDistanceSquared(box, line, d2, t)
-    type(OBB_t), intent(in) :: box
+  subroutine LineBoxDistanceSquared(box, line, d2, t)
+    type(Box_t), intent(in) :: box
     type(Line_t), intent(in) :: line
     real(dp), intent(out) :: d2, t
 
@@ -51,7 +51,7 @@ contains
     integer :: n0, axis
     logical :: ind(3)
 
-    type(OBB_t) :: newBox
+    type(Box_t) :: newBox
     type(Line_t) :: newLine
 
     ! Project segment onto box own frame
@@ -80,7 +80,7 @@ contains
        dprime(3) = -dprime(3)
     end if
 
-    ! Store new OBB and line
+    ! Store new Box and line
     newBox = box
     newBox%u = (/1, 0, 0/)
     newBox%v = (/0, 1, 0/)
@@ -94,7 +94,7 @@ contains
     ind = dprime > 0._dp
     n0 = count(.not. ind)
     if (n0 == 3) then
-       call PointOBBDistanceSquared(newBox, newLine%origin, d2)
+       call PointBoxDistanceSquared(newBox, newLine%origin, d2)
        t = 0
     else if (n0 == 2) then
        ! Select non null axis
@@ -114,7 +114,7 @@ contains
 
   contains
     subroutine CaseTwoZeroComponents(line, box, X, d2, t)
-      type(OBB_t), intent(in) :: box
+      type(Box_t), intent(in) :: box
       type(Line_t), intent(in) :: line
       integer, intent(in) :: X
 
@@ -152,7 +152,7 @@ contains
     end subroutine CaseTwoZeroComponents
 
     subroutine CaseOneZeroComponents(line, box, Z, d2, t)
-      type(OBB_t), intent(in) :: box
+      type(Box_t), intent(in) :: box
       type(Line_t), intent(in) :: line
       integer, intent(in) :: Z
 
@@ -224,7 +224,7 @@ contains
     end subroutine CaseOneZeroComponents
 
     subroutine CaseNoZeroComponents(line, box, d2, t)
-      type(OBB_t), intent(in) :: box
+      type(Box_t), intent(in) :: box
       type(Line_t), intent(in) :: line
 
       real(dp), intent(out) :: d2, t
@@ -263,7 +263,7 @@ contains
     end subroutine CaseNoZeroComponents
 
     subroutine Face(line, box, ptMinusExtents, axis, d2, t)
-      type(OBB_t), intent(in) :: box
+      type(Box_t), intent(in) :: box
       type(Line_t), intent(in) :: line
       real(dp), intent(in) :: ptMinusExtents(3)
       integer, intent(in) :: axis
@@ -449,10 +449,10 @@ contains
 
     end subroutine region5code
 
-  end subroutine LineOBBDistanceSquared
+  end subroutine LineBoxDistanceSquared
 
-  subroutine PointOBBDistanceSquared(box, point, d2)
-    type(OBB_t), intent(in) :: box
+  subroutine PointBoxDistanceSquared(box, point, d2)
+    type(Box_t), intent(in) :: box
     real(dp), intent(in) :: point(3)
     real(dp), intent(out) :: d2
 
@@ -480,7 +480,7 @@ contains
        end if
     end do
 
-  end subroutine PointOBBDistanceSquared
+  end subroutine PointBoxDistanceSquared
 
   subroutine PointLineDistanceSquared(line, point, t, d2)
     type(Line_t), intent(in) :: line

@@ -8,7 +8,7 @@ program test_volume
 
   type(Segment_t) :: segment
   type(Capsule_t) :: capsule
-  type(OBB_t) :: box
+  type(Box_t) :: box
   type(Line_t) :: line
   real(dp) :: t, d2, V
 
@@ -153,7 +153,7 @@ program test_volume
   ! Compute intersection volume
   call reset(box, segment, capsule)
   capsule%r = 3
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, BoxVolume(box), 1d-14), 'box in capsule')
 
   call reset(box, segment, capsule)
@@ -165,27 +165,27 @@ program test_volume
   box%origin = (/0, 0, 0/)
   ! TODO: better constrain on precision
   call set_depth(6)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side (depth 6)')
 
   call set_depth(9)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side (depth 9)')
 
   call set_depth(12)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 3d-2*V), 'Capsule on box side (depth 12)')
 
   call set_depth(15)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-2*V), 'Capsule on box side (depth 15)')
 
   call set_depth(18)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 3d-3*V), 'Capsule on box side (depth 18)')
 
   call set_depth(21)
-  call CapsuleOBBVolume(box, capsule, V)
+  call CapsuleBoxVolume(box, capsule, V)
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-3*V), 'Capsule on box side (depth 21)')
 
   call test_group_close()
@@ -195,7 +195,7 @@ program test_volume
   call test_group('Integrate')
   call reset(box, segment, capsule)
   capsule%r = 3
-  call CapsuleOBBIntegrate(box, capsule, V, dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V, dummyx2)
   call assert(is_close(V, BoxVolume(box) * 2, 1d-14), 'box in capsule')
 
   call reset(box, segment, capsule)
@@ -207,34 +207,34 @@ program test_volume
   box%origin = (/0, 0, 0/)
   ! TODO: better constrain on precision
   call set_depth(6)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 6)')
 
   call set_depth(9)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 9)')
 
   call set_depth(12)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4* 2, 3d-2*V), 'Capsule on box side (depth 12)')
 
   call set_depth(15)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-2*V), 'Capsule on box side (depth 15)')
 
   call set_depth(18)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 3d-3*V), 'Capsule on box side (depth 18)')
 
   call set_depth(21)
-  call CapsuleOBBIntegrate(box, capsule, V,  dummyx2)
+  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
   call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-3*V), 'Capsule on box side (depth 21)')
 
   call test_summary()
 contains
 
   subroutine reset(box, segment, capsule)
-    type(OBB_t), intent(inout) :: box
+    type(Box_t), intent(inout) :: box
     type(Segment_t), intent(inout) :: segment
     type(Capsule_t), intent(inout) :: capsule
 

@@ -1,4 +1,4 @@
-program testOBBAndCapsule
+program testBoxAndCapsule
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
@@ -7,51 +7,51 @@ program testOBBAndCapsule
   use test_utils
   implicit none
 
-  type(OBB_t) :: box
+  type(Box_t) :: box
   ! type(Line_t) :: line
   type(Segment_t) :: segment
 
   real(dp) :: d2
 
-  call test_group('Line and OBB')
+  call test_group('Line and Box')
   !----------------------------------------
   ! Lines parallel to edge
   !----------------------------------------
-  call test_group('// OBB face & OBB edge')
+  call test_group('// Box face & Box edge')
   call reset(box, segment)
   segment%start = (/1, -1, 0/)
   segment%end = (/1, 1, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Passing through edge")
 
   call reset(box, segment)
   segment%start = (/2, -10, 0/)
   segment%end = (/2, 10, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Parallel to edge, above face")
 
   call reset(box, segment)
   segment%start = (/2, 1, -10/)
   segment%end = (/2, 1, 10/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Parallel to other edge, above face")
 
   call reset(box, segment)
   segment%start = (/2, 2, -10/)
   segment%end = (/2, 2, 10/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 2._dp, 1d-14), "Parallel to edge")
 
   call reset(box, segment)
   segment%start = (/-10, 2, 2/)
   segment%end = (/10, 2, 2/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 2._dp, 1d-14), "Line along segment")
 
   call reset(box, segment)
   segment%start = (/-1, 0, 0/) / 2._dp
   segment%end = (/1, 0, 0/) / 2._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Within box")
 
   call test_group_close()
@@ -59,41 +59,41 @@ program testOBBAndCapsule
   !----------------------------------------
   ! Lines parallel to face only
   !----------------------------------------
-  call test_group('// OBB face only')
+  call test_group('// Box face only')
   call reset(box, segment)
   segment%start = (/1, 1, -10/)
   segment%end = (/1, 2, 10/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Passing through node")
 
   call reset(box, segment)
   segment%start = (/0, -1, -10/)
   segment%end = (/0, 1, 10/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Passing through face")
 
   call reset(box, segment)
   segment%start = (/1, 0, 0/)
   segment%end = (/10, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Touching face")
 
   call reset(box, segment)
   segment%start = (/2, 0, 0/)
   segment%end = (/10, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Pointing out")
 
   call reset(box, segment)
   segment%start = (/0, 0, 0/)
   segment%end = (/10, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Crossing face")
 
   call reset(box, segment)
   segment%start = (/-1, 0, 0/) / 2._dp
   segment%end = (/1, 1, 0/) / 2._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Within box")
   
   call test_group_close()
@@ -105,43 +105,43 @@ program testOBBAndCapsule
   call reset(box, segment)
   segment%start = (/1, 0, 0/)
   segment%end = (/1, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "On face")
 
   call reset(box, segment)
   segment%start = (/2, 1, 0/) / 2._dp
   segment%end = (/2, 1, 0/) / 2._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "On edge")
 
   call reset(box, segment)
   segment%start = (/1, 1, 1/)
   segment%end = (/1, 1, 1/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "On node")
 
   call reset(box, segment)
   segment%start = (/0, 0, 0/)
   segment%end = (/0, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Within box")
 
   call reset(box, segment)
   segment%start = (/2, 0, 0/)
   segment%end = (/2, 0, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Outside box (x direction)")
 
   call reset(box, segment)
   segment%start = (/0, 2, 0/)
   segment%end = (/0, 2, 0/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Outside box (y direction)")
 
   call reset(box, segment)
   segment%start = (/0, 0, 2/)
   segment%end = (/0, 0, 2/)
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 1._dp, 1d-14), "Outside box (z direction)")
 
   call test_group_close()
@@ -153,19 +153,19 @@ program testOBBAndCapsule
   call reset(box, segment)
   segment%start = (/-1, -2, -3/) / 3._dp
   segment%end = (/1, 4, 8/) / 8._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Inside box")
 
   call reset(box, segment)
   segment%start = (/-1, -2, -3/) / 3._dp
   segment%end = (/1, 4, 8/) / 6._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0._dp, 1d-14), "Trough box")
 
   call reset(box, segment)
   segment%start = (/0, 0, 11/) / 10._dp
   segment%end = (/1, 2, 20/) / 10._dp
-  call LineSegmentOBBDistanceSquared(box, segment, d2)
+  call LineSegmentBoxDistanceSquared(box, segment, d2)
   call assert(is_close(d2, 0.01_dp, 1d-14), "Outside box")
 
   call test_group_close()
@@ -174,7 +174,7 @@ program testOBBAndCapsule
 contains
 
   subroutine reset(box, segment)
-    type(OBB_t), intent(inout) :: box
+    type(Box_t), intent(inout) :: box
     type(Segment_t), intent(inout) :: segment
     box%origin = (/0, 0, 0/)
     box%u = (/1, 0, 0/)
@@ -204,5 +204,5 @@ contains
     print*, 'd=', sqrt(d2)
   end subroutine print_details
 
-end program testOBBAndCapsule
+end program testBoxAndCapsule
 
