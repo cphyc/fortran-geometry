@@ -2,6 +2,8 @@ module volumes
   use types
   use distances
   use utils
+  implicit none
+
   private
 
   integer :: MAX_DEPTH = 9
