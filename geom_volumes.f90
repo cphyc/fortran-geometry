@@ -1,7 +1,7 @@
-module volumes
-  use types
-  use distances
-  use utils
+module geom_volumes
+  use geom_types
+  use geom_distances
+  use geom_utils
   implicit none
 
   private
@@ -15,7 +15,7 @@ module volumes
 
   interface
      real(dp) function callback_fun(x)
-       use types, only: dp
+       use geom_types, only: dp
        real(dp), intent(in), dimension(3) :: x
      end function callback_fun
   end interface
@@ -220,4 +220,4 @@ contains
     depth = MAX_DEPTH
   end subroutine get_depth
 
-end module volumes
+end module geom_volumes

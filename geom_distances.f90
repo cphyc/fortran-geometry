@@ -1,9 +1,9 @@
-module distances
+module geom_distances
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
-  use utils
-  use types
+  use geom_utils
+  use geom_types
   implicit none
   private
   public :: LineOBBDistanceSquared, LineSegmentOBBDistanceSquared, PointOBBDistanceSquared, CapsuleOBBDistanceSquared
@@ -521,5 +521,5 @@ contains
 
   end subroutine PointLineSegDistanceSquared
 
-end module distances
+end module geom_distances
 

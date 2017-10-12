@@ -1,9 +1,9 @@
 program test_volume
-  use distances
-  use types
+  use geom_distances
+  use geom_types
+  use geom_volumes
+  use geom_utils
   use test_utils
-  use volumes
-  use utils
   implicit none
 
   type(Segment_t) :: segment

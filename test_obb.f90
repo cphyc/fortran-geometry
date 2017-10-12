@@ -2,8 +2,8 @@ program testOBBAndCapsule
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
-  use distances
-  use types
+  use geom_distances
+  use geom_types
   use test_utils
   implicit none
 

@@ -2,7 +2,7 @@ module test_utils
   use, intrinsic :: iso_fortran_env, only : stdin=>input_unit, &
        stdout=>output_unit, &
        stderr=>error_unit
-  use types
+  use geom_types
   implicit none
   integer :: test_depth = 0, NTEST_OK, NTEST
 contains

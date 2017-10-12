@@ -1,4 +1,4 @@
-module types
+module geom_types
   implicit none
   integer, parameter :: dp = selected_real_kind(15)
 
@@ -26,4 +26,4 @@ module types
      real(dp) :: r
   end type Capsule_t
 
-end module types
+end module geom_types
