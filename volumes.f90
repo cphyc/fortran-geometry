@@ -68,11 +68,6 @@ contains
        ! Some interaction (capsule in box or the opposite)
        call divide(box, capsule, 1, 0, V, integrand)
     end if
-  contains
-    real(dp) function dummy(X)
-      real(dp), intent(in) :: X(3)
-      dummy = 1._dp
-    end function dummy
   end subroutine CapsuleOBBIntegrate
 
   recursive subroutine divide(box, capsule, axis, depth, V, callback)
