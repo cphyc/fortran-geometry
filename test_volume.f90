@@ -30,7 +30,6 @@ program test_volume
   line%origin = (/0, 0, 0/)
   line%direction = (/1, 1, 1/)
   call PointLineDistanceSquared(line, (/1d0, 1d0, 1d0/), t, d2)
-  print*, t, d2
   call assert(is_close(d2, 0._dp, 1d-14) .and. &
        is_close(t, 1._dp, 1d-14), 'Point at tip (2)')
 
@@ -118,20 +117,38 @@ program test_volume
   call test_group_close()
 
   !----------------------------------------
+  ! CpasuleContains
+  !----------------------------------------
+  call test_group('Box contains')
+  call reset(box, segment, capsule)
+  box%extents = (/2, 3, 4/)
+  call assert(BoxContains(box, (/0._dp, 0._dp, 0._dp/)), 'center of box')
+  call assert(BoxContains(box, (/2._dp, 0._dp, 0._dp/)), 'face-x')
+  call assert(BoxContains(box, (/0._dp, 3._dp, 0._dp/)), 'face-y')
+  call assert(BoxContains(box, (/0._dp, 0._dp, 4._dp/)), 'face-z')
+  call assert(BoxContains(box, (/2._dp, 3._dp, 0._dp/)), 'edge-xy')
+  call assert(BoxContains(box, (/2._dp, 0._dp, 4._dp/)), 'edge-xz')
+  call assert(BoxContains(box, (/0._dp, 3._dp, 4._dp/)), 'edge-yz')
+  call assert(.not. BoxContains(box, (/10._dp, 3._dp, 4._dp/)), 'outside')
+
+
+  call test_group_close()
+
+  !----------------------------------------
   ! Volumes
   !----------------------------------------
   call test_group('Volumes')
+
   call reset(box, segment, capsule)
   call assert(is_close(BoxVolume(box), 8._dp, 1d-14), 'box volume')
-
-  ! Set spherical capsule
   capsule%segment%end = capsule%segment%start
-  call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3, 1d-14), 'capsule volume')
+  call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3, 1d-14), &
+       'capsule volume (sphere)')
 
   call reset(box, segment, capsule)
   call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3 &
-       + pi * capsule%r**2 * norm(capsule%segment%end - capsule%segment%start),&
-       1d-14), 'capsule volume')
+       + pi * capsule%r**2 * norm(capsule%segment%end - capsule%segment%start), 1d-14), &
+       'capsule volume')
 
   ! Compute intersection volume
   call reset(box, segment, capsule)
@@ -140,22 +157,16 @@ program test_volume
   call assert(is_close(V, BoxVolume(box), 1d-14), 'box in capsule')
 
   call reset(box, segment, capsule)
-  capsule%segment%start = (/-10, 0, 0/)
-  capsule%segment%end = (/10, 0, 0/)
-  ! capsule%r = sqrt(2._dp)
-  print*, CapsuleContains(capsule, (/0, 0, 0/)*1._dp)
-  ! call CapsuleOBBVolume(box, capsule, V)
-  print*, V, pi*capsule%r**2 * 2
-  ! call reset(box, segment, capsule)
-  ! capsule%r = 1._dp
-  ! capsule%segment%start = (/0, 0, -10/)
-  ! capsule%segment%end = (/0, 0, 10/)
-  ! call CapsuleOBBVolume(box, capsule, V)
-  ! ! call print_details()
-  ! print*, V, pi*capsule%r**2 * 2
-  ! call assert(is_close(&
-  !      V, pi*capsule%r**2 * norm(capsule%segment%end - capsule%segment%start),&
-  !      1d-14), 'capsule-cylinder in box, else outside')
+  capsule%segment%start = (/-10, -2, 0/)
+  capsule%segment%end = (/10, -2, 0/)
+  capsule%r = 2._dp
+
+  box%extents = (/2, 2, 2/)
+  box%origin = (/0, 0, 0/)
+  call set_depth(12)
+  call CapsuleOBBVolume(box, capsule, V)
+  print*, pi/2*capsule%r**2 * 4, V
+  call assert(is_close(V, pi/2*capsule%r**2 * 4, 5d-2*V), 'Capsule on box side')
 
   call test_summary()
 contains
