@@ -196,7 +196,7 @@ contains
 
     vec = capsule%segment%end - capsule%segment%start
 
-    volume = 4*pi/3*capsule%r**3 + pi * capsule%r**2 * norm(vec)
+    volume = 4*pi/3*capsule%r**3 + pi * capsule%r**2 * norm2(vec)
   end function CapsuleVolume
 
   real(dp) function BoxVolume(box) result(volume)

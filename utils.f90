@@ -4,12 +4,6 @@ module utils
 
   real(dp), parameter :: pi = atan(1._dp) * 4._dp
 contains
-  real(dp) function norm(A) result(L)
-    real(dp), intent(in) :: A(:)
-
-    L = sqrt(dot_product(A, A))
-  end function norm
-
   elemental integer function next_axis(axis) result(next)
     integer, intent(in) :: axis
 

@@ -147,7 +147,7 @@ program test_volume
 
   call reset(box, segment, capsule)
   call assert(is_close(CapsuleVolume(capsule), 4*pi/3*capsule%r**3 &
-       + pi * capsule%r**2 * norm(capsule%segment%end - capsule%segment%start), 1d-14), &
+       + pi * capsule%r**2 * norm2(capsule%segment%end - capsule%segment%start), 1d-14), &
        'capsule volume')
 
   ! Compute intersection volume
