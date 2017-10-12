@@ -38,7 +38,7 @@ contains
        ! Nothing to do
     else
        ! Some interaction (capsule in box or the opposite)
-       call divide(box, capsule, 1, 0, V, dummy)
+       call divide(box, capsule, 1, 0, V, dummy, force_refine=.false.)
     end if
   contains
     real(dp) function dummy(X)
@@ -66,15 +66,16 @@ contains
        ! Nothing to do
     else
        ! Some interaction (capsule in box or the opposite)
-       call divide(box, capsule, 1, 0, V, integrand)
+       call divide(box, capsule, 1, 0, V, integrand, force_refine=.true.)
     end if
   end subroutine CapsuleBoxIntegrate
 
-  recursive subroutine divide(box, capsule, axis, depth, V, callback)
+  recursive subroutine divide(box, capsule, axis, depth, V, callback, force_refine)
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     integer, intent(in) :: depth, axis
     procedure(callback_fun) :: callback
+    logical, intent(in) :: force_refine
 
     real(dp), intent(inout) :: V
 
@@ -108,7 +109,7 @@ contains
           end do
        end do
 
-       if (nin == 8) then
+       if (nin == 8 .and. .not. force_refine) then
           dV = BoxVolume(box) * callback(box%origin)
           if (debug) call write_padding(depth, 'all inside')
           V = V + dV
@@ -139,9 +140,9 @@ contains
           naxis = next_axis(axis)
           ikey = (/'x', 'y', 'z'/)
           if (debug) call write_padding(depth, '> LEFT ' // ikey(axis))
-          call divide(box1, capsule, naxis, depth+1, V, callback)
+          call divide(box1, capsule, naxis, depth+1, V, callback, force_refine)
           if (debug) call write_padding(depth, '> RIGHT ' // ikey(axis))
-          call divide(box2, capsule, naxis, depth+1, V, callback)
+          call divide(box2, capsule, naxis, depth+1, V, callback, force_refine)
        end if
     end if
 
