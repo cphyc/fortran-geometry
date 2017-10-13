@@ -39,7 +39,7 @@ contains
     end function dummy
   end subroutine CapsuleBoxVolume
 
-  subroutine CapsuleBoxIntegrate(box, capsule, volume, integral, integrand)
+  subroutine CapsuleBoxIntegrate(integrand, box, capsule, volume, integral)
     ! Compute the volume of the intersection of a box with a capsule
     !
     ! Note
