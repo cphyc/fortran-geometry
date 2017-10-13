@@ -10,7 +10,7 @@ program test_volume
   type(Capsule_t) :: capsule
   type(Box_t) :: box
   type(Line_t) :: line
-  real(dp) :: t, d2, V
+  real(dp) :: t, d2, V, integral
 
   !----------------------------------------
   ! Point to line
@@ -189,14 +189,15 @@ program test_volume
   call assert(is_close(V, pi/2*capsule%r**2 * 4, 1.5d-3*V), 'Capsule on box side (depth 21)')
 
   call test_group_close()
-!----------------------------------------
+  !----------------------------------------
   ! Volumes
   !----------------------------------------
   call test_group('Integrate')
   call reset(box, segment, capsule)
+  call set_depth(9)
   capsule%r = 3
-  call CapsuleBoxIntegrate(box, capsule, V, dummyx2)
-  call assert(is_close(V, BoxVolume(box) * 2, 1d-14), 'box in capsule')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, BoxVolume(box) * 2, 1d-14), 'box in capsule')
 
   call reset(box, segment, capsule)
   capsule%segment%start = (/-10, -2, 0/)
@@ -207,28 +208,40 @@ program test_volume
   box%origin = (/0, 0, 0/)
   ! TODO: better constrain on precision
   call set_depth(6)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 6)')
+  call CapsuleBoxVolume(box, capsule, V)
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4 * 2, 5d-2*integral), 'Capsule on box side (depth 6)')
 
   call set_depth(9)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 5d-2*V), 'Capsule on box side (depth 9)')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4 * 2, 5d-2*integral), 'Capsule on box side (depth 9)')
 
   call set_depth(12)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4* 2, 3d-2*V), 'Capsule on box side (depth 12)')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4* 2, 3d-2*integral), 'Capsule on box side (depth 12)')
 
   call set_depth(15)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-2*V), 'Capsule on box side (depth 15)')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4 * 2, 1.5d-2*integral), 'Capsule on box side (depth 15)')
 
   call set_depth(18)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 3d-3*V), 'Capsule on box side (depth 18)')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4 * 2, 3d-3*integral), 'Capsule on box side (depth 18)')
 
   call set_depth(21)
-  call CapsuleBoxIntegrate(box, capsule, V,  dummyx2)
-  call assert(is_close(V, pi/2*capsule%r**2 * 4 * 2, 1.5d-3*V), 'Capsule on box side (depth 21)')
+  call CapsuleBoxIntegrate(box, capsule, V, integral, dummyx2)
+  call assert(is_close(integral, pi/2*capsule%r**2 * 4 * 2, 1.5d-3*integral), 'Capsule on box side (depth 21)')
+
+  call set_depth(3)
+  call reset(box, segment, capsule)
+  capsule%segment%start = (/-1, -1, -1/)
+  capsule%segment%end = (/1, 1, 1/)
+  capsule%r = 10._dp
+
+  box%origin = (/0, 0, 0/)
+  box%extents = (/1, 1, 1/)
+  call CapsuleBoxIntegrate(box, capsule, V, integral, tophalf)
+  call assert(is_close(integral, 4._dp, 4d-14), 'Non constant function')
 
   call test_summary()
 contains
@@ -249,6 +262,8 @@ contains
 
     capsule%segment = segment
     capsule%r = 1._dp
+
+    call set_depth(3)
   end subroutine reset
 
   subroutine print_details
@@ -276,4 +291,14 @@ contains
     dummyx2 = 2._dp
   end function dummyx2
 
+  real(dp) function tophalf(X)
+    ! This is only relevant to the test using it.
+    real(dp), intent(in) :: X(3)
+
+    if (X(3) > sqrt(3._dp)) then
+       tophalf = 1._dp
+    else
+       tophalf = 0._dp
+    end if
+  end function tophalf
 end program

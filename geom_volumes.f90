@@ -21,24 +21,17 @@ module geom_volumes
   end interface
 
 contains
-  subroutine CapsuleBoxVolume(box, capsule, V)
+  subroutine CapsuleBoxVolume(box, capsule, volume)
     ! Compute the volume of the intersection of a box with a capsule
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
-    real(dp), intent(out) :: V
+    real(dp), intent(out) :: volume
 
-    real(dp) :: d2
+    real(dp) :: useless
 
-    call CapsuleBoxDistanceSquared(box, capsule, d2)
-
-    V = 0
-    if (d2 > 0) then
-       ! Their is no interaction, volume is null
-       ! Nothing to do
-    else
-       ! Some interaction (capsule in box or the opposite)
-       call divide(box, capsule, 1, 0, V, dummy, force_refine=.false.)
-    end if
+    volume = 0._dp
+    ! Some interaction (capsule in box or the opposite)
+    call divide(box, capsule, 1, 0, volume, useless, dummy, force_refine=.false.)
   contains
     real(dp) function dummy(X)
       real(dp), intent(in) :: X(3)
@@ -46,7 +39,7 @@ contains
     end function dummy
   end subroutine CapsuleBoxVolume
 
-  subroutine CapsuleBoxIntegrate(box, capsule, V, integrand)
+  subroutine CapsuleBoxIntegrate(box, capsule, volume, integral, integrand)
     ! Compute the volume of the intersection of a box with a capsule
     !
     ! Note
@@ -54,36 +47,26 @@ contains
     ! The integrand function is called with arguments in the frame of
     ! the capsule. The starting point is at [0, 0, 0], the ending
     ! point at [0, 0, L]
-
-
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
-    real(dp), intent(out) :: V
+    real(dp), intent(out) :: integral, volume
 
     procedure(callback_fun) :: integrand
 
-    real(dp) :: d2
-
-    call CapsuleBoxDistanceSquared(box, capsule, d2)
-
-    V = 0
-    if (d2 > 0) then
-       ! Their is no interaction, volume is null
-       ! Nothing to do
-    else
-       ! Some interaction (capsule in box or the opposite)
-       call divide(box, capsule, 1, 0, V, integrand, force_refine=.true.)
-    end if
+    volume   = 0._dp
+    integral = 0._dp
+    ! Some interaction (capsule in box or the opposite)
+    call divide(box, capsule, 1, 0, volume, integral, integrand, force_refine=.true.)
   end subroutine CapsuleBoxIntegrate
 
-  recursive subroutine divide(box, capsule, axis, depth, V, callback, force_refine)
+  recursive subroutine divide(box, capsule, axis, depth, volume, integral, callback, force_refine)
     type(Box_t), intent(in) :: box
     type(Capsule_t), intent(in) :: capsule
     integer, intent(in) :: depth, axis
     procedure(callback_fun) :: callback
     logical, intent(in) :: force_refine
 
-    real(dp), intent(inout) :: V
+    real(dp), intent(inout) :: volume, integral
 
     type(Box_t) :: box1, box2
     real(dp) :: dir(3), d2
@@ -126,17 +109,22 @@ contains
              ]
        u1 = u1 / norm2(u1)
        u2 = vector_product(u3, u1)
+       u2 = u2 / norm2(u2)
        ! Project point on basis
        point = [dot_product(u1, point), dot_product(u2, point), dot_product(u3, point)]
 
        if (nin == 8 .and. .not. force_refine) then
-          dV = BoxVolume(box) * callback(point)
+          dV = BoxVolume(box)
           if (debug) call write_padding(depth, 'all inside')
-          V = V + dV
+          volume = volume + dV
+          integral = integral + callback(point) * dV
        else if (depth == MAX_DEPTH) then
+          if (nin == 0) return
           ! Estimate volume by number of points in volume
-          dV = BoxVolume(box) * nin / 8._dp * callback(point)
-          V = V + dV
+          dV = BoxVolume(box) * nin / 8._dp
+
+          volume = volume + dV
+          integral = integral + callback(point) * dV
           if (debug) call write_padding(depth, 'max depth')
        else
           ! Split box in 2
@@ -160,9 +148,9 @@ contains
           naxis = next_axis(axis)
           ikey = (/'x', 'y', 'z'/)
           if (debug) call write_padding(depth, '> LEFT ' // ikey(axis))
-          call divide(box1, capsule, naxis, depth+1, V, callback, force_refine)
+          call divide(box1, capsule, naxis, depth+1, volume, integral, callback, force_refine)
           if (debug) call write_padding(depth, '> RIGHT ' // ikey(axis))
-          call divide(box2, capsule, naxis, depth+1, V, callback, force_refine)
+          call divide(box2, capsule, naxis, depth+1, volume, integral, callback, force_refine)
        end if
     end if
 
