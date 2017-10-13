@@ -5,7 +5,7 @@ module geom_volumes
   implicit none
 
   private
-
+  logical, parameter :: debug = .false.
   integer :: MAX_DEPTH = 9
   public :: BoxContains, CapsuleContains
   public :: BoxVolume, CapsuleVolume
@@ -90,8 +90,6 @@ contains
     integer :: naxis, nin, i, j, k
 
     real(dp) :: point(3), dV, u1(3), u2(3), u3(3)
-
-    logical, parameter :: debug = .false.
     character(len=1) :: ikey(3)
 
     ! Compute distance from box to capsule
