@@ -6,12 +6,13 @@ module geom_volumes
 
   private
   logical, parameter :: debug = .false.
-  integer :: MAX_DEPTH = 9
+  integer :: MAX_DEPTH = 9, NTODRAW = 1000
   public :: BoxContains, CapsuleContains
   public :: BoxVolume, CapsuleVolume
-  public :: CapsuleBoxVolume, CapsuleBoxIntegrate
+  public :: CapsuleBoxVolume, CapsuleBoxIntegrate, CapsuleBoxIntegrateMC
 
   public :: set_depth, get_depth
+  public :: set_ndraw, get_ndraw
 
   interface
      real(dp) function callback_fun(x)
@@ -58,6 +59,45 @@ contains
     ! Some interaction (capsule in box or the opposite)
     call divide(box, capsule, 1, 0, volume, integral, integrand, force_refine=.true.)
   end subroutine CapsuleBoxIntegrate
+
+  subroutine CapsuleBoxIntegrateMC(integrand, box, capsule, volume, integral)
+    ! Compute the volume of the intersection of a box with a capsule (using Monte Carlo sampling)
+    !
+    ! Note
+    ! ----
+    ! The integrand function is called with arguments in the frame of
+    ! the capsule. The starting point is at [0, 0, 0], the ending
+    ! point at [0, 0, L]
+    type(Box_t), intent(in) :: box
+    type(Capsule_t), intent(in) :: capsule
+    real(dp), intent(out) :: integral, volume
+
+    procedure(callback_fun) :: integrand
+    integer :: ndrawn
+    real(dp) :: vec(3), tmp
+
+    volume   = 0._dp
+    integral = 0._dp
+
+    do ndrawn = 1, NTODRAW
+       ! Draw random number within the box
+       call random_number(vec)
+       vec = (vec - 0.5_dp) * box%extents                   ! Rescale by extents
+       vec = vec(1)*box%u + vec(2)*box%v + vec(3)*box%w     ! Apply on axis
+       vec = vec + box%origin                               ! Add origin
+       if (CapsuleContains(capsule, vec)) then
+          integral = integral + integrand(vec) / NTODRAW
+          volume = volume + 1._dp / NTODRAW
+       end if
+    end do
+
+    ! Rescale by box volume
+    tmp = BoxVolume(box)
+    volume = volume * tmp
+    integral = integral * tmp
+
+  end subroutine CapsuleBoxIntegrateMC
+
 
   recursive subroutine divide(box, capsule, axis, depth, volume, integral, callback, force_refine)
     type(Box_t), intent(in) :: box
@@ -228,5 +268,17 @@ contains
     integer, intent(out) :: depth
     depth = MAX_DEPTH
   end subroutine get_depth
+
+  subroutine set_ndraw(val)
+    integer, intent(in) :: val
+
+    NTODRAW = val
+  end subroutine set_ndraw
+
+  subroutine get_ndraw(val)
+    integer, intent(out) :: val
+
+    val = NTODRAW
+  end subroutine get_ndraw
 
 end module geom_volumes
