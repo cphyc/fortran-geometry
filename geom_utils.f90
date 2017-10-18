@@ -33,4 +33,17 @@ contains
          ]
   end function vector_product
 
+  subroutine basis_from_axis(u, v, w)
+    ! Generate an orthogonal base from a single axis.
+    !
+    ! Note: this basis is of course arbitrary
+    real(dp), intent(in), dimension(3)  :: u
+    real(dp), intent(out), dimension(3) :: v, w
+
+    v = [-u(2) - u(3), u(1) - u(3), u(1) + u(2)]
+    v = v / norm2(v)
+    w = vector_product(u, v)
+    w = w / norm2(w)
+  end subroutine basis_from_axis
+
 end module geom_utils
